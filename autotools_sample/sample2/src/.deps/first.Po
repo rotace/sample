@@ -1,0 +1,3 @@
+first.o: first.c common.h
+
+common.h:

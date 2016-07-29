@@ -1,0 +1,7 @@
+{
+  "run_list": ["recipe[passenger]"],
+  "passenger" : {
+    "Passenger-loadmodule" :"/usr/local/lib/ruby/gems/2.0.0/gems/passenger-4.0.48/buildout/apache2/mod_passenger.so",
+    "PassengerRoot" :"/usr/local/lib/ruby/gems/2.0.0/gems/passenger-4.0.48",
+    "PassengerDefaultRuby" :"/usr/local/bin/ruby"
+}

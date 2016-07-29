@@ -1,0 +1,10 @@
+LoadModule passenger_module 
+<IfModule mod_passenger.c>
+  PassengerRoot 
+  PassengerDefaultRuby 
+</IfModule>
+LoadModule passenger_module 
+<IfModule mod_passenger.c>
+  PassengerRoot 
+  PassengerDefaultRuby 
+</IfModule>

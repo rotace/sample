@@ -1,0 +1,7 @@
+{
+  "run_list": ["recipe[apache]"],
+  "apache"  : {
+      "host"  :"localhost",
+      "domain":"localdomain"
+  }
+}
