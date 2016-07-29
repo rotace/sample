@@ -1,0 +1,54 @@
+Public Function interp1(val As Variant) As Double
+    Dim sheetName As String
+    Dim maxCol As Integer
+    Dim x, y As Double
+    Dim x1, y1, x2, y2 As Double
+
+
+    sheetName = "Sheet1"
+    maxCol = Worksheets(sheetName).Range("A1").End(xlDown).Row
+    Debug.Print "maxRow =" & maxCol
+    
+    If IsNumeric(val) Then
+        x = val
+    Else
+        x = val.Value
+    End If
+    
+    For i = 1 To maxCol - 1
+        x1 = Worksheets(sheetName).Cells(i, 1).Value
+        y1 = Worksheets(sheetName).Cells(i, 2).Value
+        x2 = Worksheets(sheetName).Cells(i + 1, 1).Value
+        y2 = Worksheets(sheetName).Cells(i + 1, 2).Value
+        
+        If x < x1 Then
+            If i = 1 Then
+            '範囲外->外挿
+                GoTo Calc
+                
+            Else
+                MsgBox "データxが単調増加していません。", vbOKOnly, "Error"
+                
+            End If
+            
+        ElseIf x > x2 Then
+            GoTo Continue
+            
+        Else
+        '範囲内->内挿
+            GoTo Calc
+            
+        End If
+    
+Continue:
+    Next i
+    
+Calc:
+    Dim a, b As Double
+    a = (x2 - x) / (x2 - x1)
+    b = (x - x1) / (x2 - x1)
+    y = a * y1 + b * y2
+    
+    interp1 = y
+    
+End Function
