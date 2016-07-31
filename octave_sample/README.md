@@ -24,3 +24,5 @@ fft計算sample
 octave-forge instrument control package Tutorial  
 参考：http://wiki.octave.org/Instrument_control_package
 
+#### numerical_integration
+参考:http://www.inaba-lab.org/wiki
