@@ -28,6 +28,7 @@ octave-forge instrument control package Tutorial
 数値積分法について  
 参考:http://www.inaba-lab.org/wiki/index.php/%E3%82%B7%E3%83%9F%E3%83%A5%E3%83%AC%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3
 
-#### ode_solver
-常微分方程式ソルバーの利用サンプル  
-参考:http://jp.mathworks.com/help/matlab/math/ordinary-differential-equations.html
+#### matlab_doc
+matlabの公式ドキュメントの内容をoctaveで実装  
+参考:http://jp.mathworks.com/help/matlab
+
