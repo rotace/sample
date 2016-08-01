@@ -1,12 +1,19 @@
 Public Function interp1(val As Variant) As Double
+
+    Application.Volatile
+    
     Dim sheetName As String
     Dim maxCol As Integer
     Dim x, y As Double
     Dim x1, y1, x2, y2 As Double
-
+    Dim xcell, ycell As Object
 
     sheetName = "Sheet1"
-    maxCol = Worksheets(sheetName).Range("A1").End(xlDown).Row
+    Set xcell = Worksheets(sheetName).Range("A1")
+    Set ycell = Worksheets(sheetName).Range("B1")
+    maxCol = xcell.End(xlDown).Row - xcell.Row
+    Debug.Print "xcell =" & xcell.Value
+    Debug.Print "ycell =" & ycell.Value
     Debug.Print "maxRow =" & maxCol
     
     If IsNumeric(val) Then
@@ -15,11 +22,11 @@ Public Function interp1(val As Variant) As Double
         x = val.Value
     End If
     
-    For i = 1 To maxCol - 1
-        x1 = Worksheets(sheetName).Cells(i, 1).Value
-        y1 = Worksheets(sheetName).Cells(i, 2).Value
-        x2 = Worksheets(sheetName).Cells(i + 1, 1).Value
-        y2 = Worksheets(sheetName).Cells(i + 1, 2).Value
+    For i = 1 To maxCol
+        x1 = xcell.Offset(i, 0).Value
+        y1 = ycell.Offset(i, 0).Value
+        x2 = xcell.Offset(i + 1, 0).Value
+        y2 = ycell.Offset(i + 1, 0).Value
         
         If x < x1 Then
             If i = 1 Then
@@ -52,3 +59,8 @@ Calc:
     interp1 = y
     
 End Function
+
+
+Sub debug_macro()
+    interp1 (0#)
+End Sub

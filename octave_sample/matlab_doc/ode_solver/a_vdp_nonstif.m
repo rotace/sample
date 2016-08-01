@@ -1,8 +1,8 @@
-function a_fdp_nonstif
+function a_vdp_nonstif
 	 
   t = [0 : 0.1 : 20];
-  x_0 = [2;0];
-  [y, istate, msg] = lsode(@vdp1, x_0, t);
+  y_0 = [2;0];
+  [y, istate, msg] = lsode(@vdp1, y_0, t);
 
   display(["istate is ",num2str(istate)]);
 
