@@ -7,10 +7,14 @@ $s = $s | %{ $_.ToString()  -creplace "^[a-zA-Z0-9:_.\\]*\s*Geometry:\s*"}
 $pxrow=$s -creplace "x\d*\+\d*\+\d*"
 $pxcol=$s -creplace "^\d*x" | %{ $_ -creplace "\+\d*\+\d*$"}
 
-$pxcel= ([int]$pxrow * [int]$pxcol)
-$rate = [int](48000000 / [int]$pxcel)
+$ipx= ([int]$pxrow * [int]$pxcol)
+$opx=[int]307200
+$rate=[int]([Math]:Sqrt($opx/$ipx)*100)
 
-echo "Geometry: $pxrow x $pxcol = $pxcel"
-echo "ScaleRate: $rate"
-convert -resize ${rate}% $f mod_$f
+$pf= Split-Path $f -Parent
+$cf= Split-Path $f -Leaf
+$cf= "mod_$cf"
+$nf= Join-Path $pf $cf
+
+convert -resize ${rate}% $f $nf
 }
