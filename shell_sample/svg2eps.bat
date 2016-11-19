@@ -1,1 +1,0 @@
-for %%A in (%*) do "C:\Program Files\Inkscape\inkscape.exe" -z -f %%A --export-emf %%A.emf
