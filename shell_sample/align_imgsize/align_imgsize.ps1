@@ -17,11 +17,11 @@ $rate=[int]([Math]::Sqrt($opx/$ipx)*100)
 $pf= Split-Path $f -Parent
 $cf= Split-Path $f -Leaf
 $cf= "mod_$cf"
-$nf= Join-Path $pf $cf
+$of= Join-Path $pf $cf
 
-echo "InFile:$f"
-echo "OutFile:$nf"
+echo "InFile:$if"
+echo "OutFile:$of"
 echo "Convert Rate:${rate}%"
 
-convert -resize ${rate}% $f $nf
+convert -resize ${rate}% $f $of
 }

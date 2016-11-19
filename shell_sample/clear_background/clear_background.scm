@@ -29,6 +29,7 @@
     ;; (gimp-display-new img)
     ;; (gimp-displays-flush)
     (gimp-file-save 1 img layer outfile infile)
+    (gimp-image-delete img)
 )
 )
 
