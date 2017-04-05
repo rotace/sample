@@ -1,5 +1,5 @@
 
-
+# http://d.hatena.ne.jp/moriyoshi/20091214/1260779899
 
 ALL:build
 
