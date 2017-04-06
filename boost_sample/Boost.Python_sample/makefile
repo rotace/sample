@@ -1,7 +1,7 @@
 
 # http://d.hatena.ne.jp/moriyoshi/20091214/1260779899
 
-SRCS=basic.cpp basic2.cpp
+SRCS=basic.cpp basic2.cpp returning_object.cpp
 OBJS=$(SRCS:%.cpp=%.so)
 
 CFLAGS=-I`/usr/bin/python2.7 -c 'from distutils.sysconfig import *; print(get_python_inc())'` -DPIC -shared -fPIC
