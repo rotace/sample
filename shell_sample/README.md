@@ -2,6 +2,8 @@ Shell Batch Sample
 ===================
 Shell(cmd.exe,bash etc.)のバッチスクリプト集
 
+#### bash_setting  
+スタートアップ，bash初期設定などのスクリプト集  
 #### bat2sh
 バッチファイルからcygwinのbashを起動するスクリプト
 #### bat2ps1
