@@ -17,8 +17,8 @@ function [g, x, l] = lqi (sys, q, r = [], s = [])
     nx=rows(b);
     ny=rows(c);
 
-    a =[a,zeros(nx,ny); c,zeros(ny,ny)];
-    b =[b;zeros(ny,nu)];
+    a =[a,zeros(nx,ny); -c,zeros(ny,ny)];
+    b =[b;-d];
 
     if isequal(s,[])
       s=zeros(nx+ny,nu);

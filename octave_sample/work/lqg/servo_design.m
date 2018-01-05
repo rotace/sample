@@ -21,13 +21,12 @@ K = lqi(sysm,Q,R);% XXX fix
 
 sensors=[1];%y
 known=[1,2];%u
-unknown=setdiff(1:columns(P.b), known);%w
+unknown=setdiff(1:columns(sysm.b), known);%w
 
 Qn = [4 2;2 1];
 Rn = 0.7;
 [kest,L,X] = kalman(sys,Qn,Rn,[],sensors,known);
 
-trksys=track(sysm,K,L);
+trksys=track(sysm,K,L)
 
-[trksys.c;-k]
 % http://home.hiroshima-u.ac.jp/saeki/Appendix/ModernControl_Matlab.pdf
