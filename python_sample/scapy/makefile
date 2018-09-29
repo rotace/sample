@@ -17,4 +17,4 @@ ipython:
 	sudo $(PYDIR)/ipython
 
 clean:
-	rm -rf *.pyc *.ini
+	sudo rm -rf __pycache__/ *.pyc *.ini
