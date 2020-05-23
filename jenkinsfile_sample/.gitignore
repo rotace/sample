@@ -1,0 +1,5 @@
+*.gcno
+*.o
+hello_cpputest
+*.gcda
+*.xml

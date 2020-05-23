@@ -1,0 +1,84 @@
+pipeline {
+    agent any
+
+    post {
+        success {
+            updateGitlabCommitStatus name: 'all', state: 'success'
+            updateGitlabCommitStatus name: 'build', state: 'success'
+            updateGitlabCommitStatus name: 'test', state: 'success'
+            updateGitlabCommitStatus name: 'deploy', state: 'success'
+        }
+        failure {
+            updateGitlabCommitStatus name: 'all', state: 'failed'
+            updateGitlabCommitStatus name: 'build', state: 'failed'
+            updateGitlabCommitStatus name: 'test', state: 'failed'
+            updateGitlabCommitStatus name: 'deploy', state: 'failed'
+        }
+        unstable {
+            updateGitlabCommitStatus name: 'all', state: 'failed'
+            updateGitlabCommitStatus name: 'build', state: 'failed'
+            updateGitlabCommitStatus name: 'test', state: 'failed'
+            updateGitlabCommitStatus name: 'deploy', state: 'failed'
+        }
+        always {
+            cleanWs()
+        }
+    }
+
+    options {
+        gitLabConnection('GitLab')
+        gitlabBuilds(builds: ['build', 'test', 'deploy', 'all'])
+    }
+
+    triggers {
+        gitlab(
+            triggerOnPush: true,
+            triggerOnMergeRequest: true,
+            branchFilterType: 'All',
+            addNoteOnMergeRequest: true,
+            addCiMessage: true
+        )
+    }
+
+    stages {
+        stage('build'){
+            steps {
+                updateGitlabCommitStatus name: 'all', state: 'running'
+                updateGitlabCommitStatus name: 'build', state: 'running'
+                echo "BUILD"
+                sh "make"
+                sh './hello_cpputest -ojunit | echo "ignore failure"'
+                sh "ls"
+            }
+        }
+
+        stage('test'){
+            steps {
+                updateGitlabCommitStatus name: 'test', state: 'running'
+                echo "TEST"
+                junit "cpputest_MatrixTestGroup.xml"
+            }
+        }
+
+        stage('deploy'){
+            steps {
+                updateGitlabCommitStatus name: 'deploy', state: 'running'
+                echo "DEPLOY"
+                sh "gcovr -r . --xml --output=gcovr.xml"
+                cobertura (
+                    autoUpdateHealth: false,
+                    autoUpdateStability: false,
+                    coberturaReportFile: 'gcovr.xml',
+                    conditionalCoverageTargets: '70, 0, 0',
+                    failUnhealthy: false,
+                    failUnstable: false,
+                    lineCoverageTargets: '80, 0, 0',
+                    maxNumberOfBuilds: 0,
+                    methodCoverageTargets: '80, 0, 0',
+                    onlyStable: false,
+                    zoomCoverageChart: false
+                )
+            }
+        }
+    }
+}
