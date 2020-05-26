@@ -4,21 +4,15 @@ pipeline {
     post {
         success {
             updateGitlabCommitStatus name: 'all', state: 'success'
-            updateGitlabCommitStatus name: 'build', state: 'success'
-            updateGitlabCommitStatus name: 'test', state: 'success'
-            updateGitlabCommitStatus name: 'deploy', state: 'success'
         }
         failure {
             updateGitlabCommitStatus name: 'all', state: 'failed'
-            updateGitlabCommitStatus name: 'build', state: 'failed'
-            updateGitlabCommitStatus name: 'test', state: 'failed'
-            updateGitlabCommitStatus name: 'deploy', state: 'failed'
         }
         unstable {
             updateGitlabCommitStatus name: 'all', state: 'failed'
-            updateGitlabCommitStatus name: 'build', state: 'failed'
-            updateGitlabCommitStatus name: 'test', state: 'failed'
-            updateGitlabCommitStatus name: 'deploy', state: 'failed'
+        }
+        aborted {
+            updateGitlabCommitStatus name: 'all', state: 'canceled'
         }
         always {
             cleanWs()
@@ -50,6 +44,20 @@ pipeline {
                 sh './hello_cpputest -ojunit | echo "ignore failure"'
                 sh "ls"
             }
+            post {
+                success {
+                    updateGitlabCommitStatus name: 'build', state: 'success'
+                }
+                failure {
+                    updateGitlabCommitStatus name: 'build', state: 'failed'
+                }
+                unstable {
+                    updateGitlabCommitStatus name: 'build', state: 'failed'
+                }
+                aborted {
+                    updateGitlabCommitStatus name: 'build', state: 'canceled'
+                }
+            }
         }
 
         stage('test'){
@@ -57,6 +65,20 @@ pipeline {
                 updateGitlabCommitStatus name: 'test', state: 'running'
                 echo "TEST"
                 junit "cpputest_MatrixTestGroup.xml"
+            }
+            post {
+                success {
+                    updateGitlabCommitStatus name: 'test', state: 'success'
+                }
+                failure {
+                    updateGitlabCommitStatus name: 'test', state: 'failed'
+                }
+                unstable {
+                    updateGitlabCommitStatus name: 'test', state: 'failed'
+                }
+                aborted {
+                    updateGitlabCommitStatus name: 'test', state: 'canceled'
+                }
             }
         }
 
@@ -78,6 +100,20 @@ pipeline {
                     onlyStable: false,
                     zoomCoverageChart: false
                 )
+            }
+            post {
+                success {
+                    updateGitlabCommitStatus name: 'deploy', state: 'success'
+                }
+                failure {
+                    updateGitlabCommitStatus name: 'deploy', state: 'failed'
+                }
+                unstable {
+                    updateGitlabCommitStatus name: 'deploy', state: 'failed'
+                }
+                aborted {
+                    updateGitlabCommitStatus name: 'deploy', state: 'canceled'
+                }
             }
         }
     }
