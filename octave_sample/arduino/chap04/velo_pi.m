@@ -1,4 +1,4 @@
-function ret=velo_pi(is_arduino_enabled=false)
+function ret=velo_pi(is_arduino_enabled=false, is_velform_enabled=false)
 
     % 開発環境でqtのtoolkitがSegFaultするため、gnuplotのtoolkitへ変更
     graphics_toolkit("gnuplot")
@@ -8,6 +8,7 @@ function ret=velo_pi(is_arduino_enabled=false)
     % パッケージをロード
     pkg load control
     pkg load arduino
+    pkg load signal
 
     if is_arduino_enabled
         % arduinoにoctave通信用のコアライブラリと自作ライブラリを書き込み
@@ -30,67 +31,79 @@ function ret=velo_pi(is_arduino_enabled=false)
 
     % 演算周期[sec]
     dt = 0.1;
+
+    % 目標値モデル(1回転=20cnt, 最大毎秒5回転=100cnt/sec, 周期2sec)
+    t = [0:dt:30];
+    n = length(t);
+    r = max( [zeros(1,n);sawtooth(0.5*t)] );    % 三角波
+    r = max( [zeros(1,n);square(0.5*t)] );      % 矩形波
+    % r = max( [zeros(1,n);chirp(0.5*t)] );       % チャープ波
+    % r = max( [zeros(1,n);sinc(0.5*t)] );        % sinc関数
+    % r = max( [zeros(1,n);diric(0.5*t, 7)] );    % 周期的sinc関数
+    % r = max( [zeros(1,n);tripuls(0.5*t)] );     % 三角波単パルス
+    % r = max( [zeros(1,n);rectpuls(0.5*t)] );    % 方形波単パルス
+    % r = max( [zeros(1,n);gauspuls(0.5*t)] );    % ガウスパルス
+    % r = max( [zeros(1,n);pulstran(t, sin(0.5*t), "rectpuls")] );    % パルス列
+
+    % 制御対象同定(周波数スイープ)
+    r = chirp(t, 0, 30, 1);
+    r = (r+1)/2/2+0.5;
+
+    r = r*50;
+
     % 制御対象モデル
     K=70;
     T=0.2;
     u_offset=0.125;
-    sys = ss(c2d(tf(K,[T,1]),dt));
-    % 目標値モデル(1回転=20cnt, 最大毎秒5回転=100cnt/sec, 周期2secの方形波)
-    r_max=50;
-    sg.pri=1.0;
+    G = ss(c2d(tf(K,[T,1]),dt));
+    
     % 制御モデル
     Kp=0.031429;
     Ki=0.18286;
-    ctl = ss(c2d(pid(Kp,Ki), dt));
+    Kp=0.0085714;
+    Ki=0.045714;
+    C = ss(c2d(pid(Kp,Ki), dt));
 
     % 記録用メモリ初期化
-    n=uint32(10/dt);
-    ret.r=zeros(1,n);% 目標値r
-    ret.e=zeros(1,n);% 偏差e
-    ret.u=zeros(1,n);% 操作量u
-    ret.y=zeros(1,n);% 制御量y
-    ret.ts=zeros(1,n);
-    ret.te=zeros(1,n);
-
-    % 変数初期化
-    ctlx=zeros(length(ctl.A),1);
-    sysx=zeros(length(sys.A),1);
-    y=0.0; r=0.0; e=0.0; u=0.0;
+    g_x=zeros(length(G.A),1);
+    c_x=zeros(length(C.A),1);
+    c_y=0.0; c_y_old=0.0;
+    g_u=0.0;
+    g_y=0.0;
+    du=0.0;
+    y=zeros(1,n);% 制御量y
+    u=zeros(1,n);% 操作量u
+    e=zeros(1,n);% 偏差e
 
     unwind_protect
-    % while (true)
     for i=1:n
         tic
-        % 制御量yの更新
-        if is_arduino_enabled
-            % about 30ms
-            [l,r]=readEncCount(en);
-            y=double(l)/dt;
+        e(i)=r(i)-g_y;
+
+        % コントローラ
+        c_x = C.A*c_x + C.B*e(i);
+        c_y = C.C*c_x + C.D*e(i);
+
+        % リセットワインドアップ対策
+        if is_velform_enabled
+            % ポジションフォームをベロシティフォームに変換
+            du  = c_y - c_y_old; c_y_old = c_y;
+            % ベロシティフォームをポジションフォームに変換
+            g_u = g_u + du;
         else
-            x=sysx;
-            x=sys.A*x + sys.B*u;
-            y=sys.C*x + sys.D*u;
-            sysx=x;
+            g_u = c_y;
         end
 
-        % 目標値rの更新
-        sg=square_wave(sg,dt);
-        r=sg.val*r_max;
-
-        % 偏差eの更新
-        e=r-y;
-
-        % 操作量uの更新
-        x=ctlx;
-        x=ctl.A*x + ctl.B*e;
-        u=ctl.C*x + ctl.D*e;
-        ctlx=x;
-
         % 制御対象へ入力
-        u=max(u,0.0);u=min(u,1.0);
         if is_arduino_enabled
-            % about 30ms
-            writePWMDutyCycle(ar, MOT_LF, u);
+            % リミッタ
+            g_u=max(g_u,0.0);g_u=min(g_u,1.0);
+
+            % 制御入出力(about 30ms)
+            u(i)= g_u;
+            [cnt_l, cnt_r]=controlEncMotor(en, u(i), 0.0);
+            g_y=double(cnt_l)/dt;
+            y(i)= g_y;
 
             % 残り時間待機
             ptime = dt-toc;
@@ -98,13 +111,25 @@ function ret=velo_pi(is_arduino_enabled=false)
                 disp("pause time < 0")
             end
             pause(ptime)
-        end
+        else
+            % 簡易外乱モデル
+            if g_y < 5
+                % 静止摩擦
+                g_u = g_u - 0.8;
+            else
+                % クーロン摩擦
+                g_u = -u_offset*(1-g_u) + 1.0*g_u;
+            end
 
-        % 記録
-        ret.r(i)=r;
-        ret.e(i)=e;
-        ret.u(i)=u;
-        ret.y(i)=y;
+            % リミッタ
+            g_u=max(g_u,0.0);g_u=min(g_u,1.0);
+
+            % 制御対象モデル
+            u(i)= g_u;
+            g_x = G.A*g_x + G.B*g_u;
+            g_y = G.C*g_x + G.D*g_u;
+            y(i)= g_y;
+        end
         
     end
     unwind_protect_cleanup
@@ -118,30 +143,11 @@ function ret=velo_pi(is_arduino_enabled=false)
     end
     end_unwind_protect
 
-    ret.ctl=ctl;
-
     clf
-    subplot(2,1,1)
-    hold on
-    plot(ret.r, "*-")
-    plot(ret.e, ".-")
-    plot(ret.y, "d-")
-    legend("r","e","y")
-    subplot(2,1,2)
-    plot(ret.u, "+-")
+    subplot(2,1,1);
+    plot(t,r, t,y, t,e);
+    legend("r", "y", "e")
+    subplot(2,1,2);
+    plot(t,u);
     legend("u")
-end
-
-function obj = square_wave(obj, dt)
-    if ~isfield(obj, "is_init")
-        obj.is_init=true;
-        obj.t=0.0;
-        obj.x=1.0;
-    end
-    if obj.t>=obj.pri
-        obj.x=-obj.x;
-        obj.t-=obj.pri;
-    end
-    obj.val = max(obj.x,0.0);
-    obj.t+= dt;
 end

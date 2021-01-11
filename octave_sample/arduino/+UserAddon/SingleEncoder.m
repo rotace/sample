@@ -18,6 +18,7 @@ classdef SingleEncoder < arduinoio.LibraryBase
   properties(Access = private, Constant = true)
       ECHO_COMMAND = hex2dec("00");
       CMDID_READ_COUNT = hex2dec("01");
+      CMDID_CONTROL = hex2dec("02");
   end
 
   properties(Access = protected, Constant = true)
@@ -41,6 +42,13 @@ classdef SingleEncoder < arduinoio.LibraryBase
       count_l = uint32(tmp(1))*(256*256*256) + uint32(tmp(2))*(256*256) + uint32(tmp(3))*256 + uint32(tmp(4));
       count_r = uint32(tmp(5))*(256*256*256) + uint32(tmp(6))*(256*256) + uint32(tmp(7))*256 + uint32(tmp(8));
     end
-   
+
+    function [count_l, count_r] = controlEncMotor(obj, rate_l, rate_r)
+      cmdID = obj.CMDID_CONTROL;
+      [tmp, sz] = sendCommand(obj.Parent, obj.LibraryName, cmdID, [uint8(rate_l*255), uint8(rate_r*255)]);
+      count_l = uint32(tmp(1))*(256*256*256) + uint32(tmp(2))*(256*256) + uint32(tmp(3))*256 + uint32(tmp(4));
+      count_r = uint32(tmp(5))*(256*256*256) + uint32(tmp(6))*(256*256) + uint32(tmp(7))*256 + uint32(tmp(8));
+    end
+    
   end
 end

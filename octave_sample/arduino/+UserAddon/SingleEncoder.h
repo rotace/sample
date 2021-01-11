@@ -17,6 +17,10 @@
  */
 #include "LibraryBase.h"
 
+#define MOT_RF 5
+#define MOT_RB 6
+#define MOT_LF 9
+#define MOT_LB 10
 #define ENC_L  2
 #define ENC_R  3
 
@@ -40,8 +44,9 @@ void readEncoderR() {
 }
 
 #define CMDID_READ_COUNT 0x01
+#define CMDID_CONTROL    0x02
 
-const char NO_NEED_VALUE[] PROGMEM = "No Needs a value to readCount";
+const char INPUT_VALUE_INCORRECT[] PROGMEM = "Input Value Incorrect";
 
 class SingleEncoder : public LibraryBase
 {
@@ -78,10 +83,35 @@ public:
           datasz = 8;
           sendResponseMsg(cmdID, data, datasz);
         }else{
-          sendErrorMsg_P(NO_NEED_VALUE);
+          sendErrorMsg_P(INPUT_VALUE_INCORRECT);
         }
         break;
-        
+
+      case CMDID_CONTROL:
+        if(datasz == 2){
+
+          analogWrite(MOT_LF, data[0]);
+          analogWrite(MOT_RF, data[1]);
+          tmp = count_l;
+          count_l = 0;
+          data[0] = (tmp>>24)&0xff;
+          data[1] = (tmp>>16)&0xff;
+          data[2] = (tmp>>8)&0xff;
+          data[3] = (tmp)&0xff;
+          tmp = count_r;
+          count_r = 0;
+          data[4] = (tmp>>24)&0xff;
+          data[5] = (tmp>>16)&0xff;
+          data[6] = (tmp>>8)&0xff;
+          data[7] = (tmp)&0xff;
+          
+          datasz = 8;
+          sendResponseMsg(cmdID, data, datasz);
+        }else{
+          sendErrorMsg_P(INPUT_VALUE_INCORRECT);
+        }
+        break;
+
       default:
         // notify of invalid cmd
         sendUnknownCmdIDMsg();
