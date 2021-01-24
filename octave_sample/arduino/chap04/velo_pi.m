@@ -22,10 +22,10 @@ function ret=velo_pi(is_arduino_enabled=false, is_velform_enabled=false)
         MOT_RB = "d6";
         MOT_LF = "d9";
         MOT_LB = "d10";
-        writePWMDutyCycle(ar, MOT_LF, 0);
-        writePWMDutyCycle(ar, MOT_RF, 0);
-        writePWMDutyCycle(ar, MOT_LB, 0);
-        writePWMDutyCycle(ar, MOT_RB, 0);
+        tic;writePWMDutyCycle(ar, MOT_LF, 0);toc
+        tic;writePWMDutyCycle(ar, MOT_RF, 0);toc
+        tic;writePWMDutyCycle(ar, MOT_LB, 0);toc
+        tic;writePWMDutyCycle(ar, MOT_RB, 0);toc
     end
 
 
@@ -46,10 +46,9 @@ function ret=velo_pi(is_arduino_enabled=false, is_velform_enabled=false)
     % r = max( [zeros(1,n);pulstran(t, sin(0.5*t), "rectpuls")] );    % パルス列
 
     % 制御対象同定(周波数スイープ)
+    rmin=40; rmax=70;
     r = chirp(t, 0, 30, 1);
-    r = (r+1)/2/2+0.5;
-
-    r = r*50;
+    r = (rmax-rmin)*(r+1)/2+rmin;
 
     % 制御対象モデル
     K=70;
@@ -108,7 +107,7 @@ function ret=velo_pi(is_arduino_enabled=false, is_velform_enabled=false)
             % 残り時間待機
             ptime = dt-toc;
             if ptime<0
-                disp("pause time < 0")
+                disp(["pause time < 0, actual:", num2str(ptime)])
             end
             pause(ptime)
         else

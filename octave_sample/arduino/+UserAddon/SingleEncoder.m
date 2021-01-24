@@ -19,6 +19,7 @@ classdef SingleEncoder < arduinoio.LibraryBase
       ECHO_COMMAND = hex2dec("00");
       CMDID_READ_COUNT = hex2dec("01");
       CMDID_CONTROL = hex2dec("02");
+      CMDID_SYSIDT = hex2dec("03");
   end
 
   properties(Access = protected, Constant = true)
@@ -48,6 +49,18 @@ classdef SingleEncoder < arduinoio.LibraryBase
       [tmp, sz] = sendCommand(obj.Parent, obj.LibraryName, cmdID, [uint8(rate_l*255), uint8(rate_r*255)]);
       count_l = uint32(tmp(1))*(256*256*256) + uint32(tmp(2))*(256*256) + uint32(tmp(3))*256 + uint32(tmp(4));
       count_r = uint32(tmp(5))*(256*256*256) + uint32(tmp(6))*(256*256) + uint32(tmp(7))*256 + uint32(tmp(8));
+    end
+
+    function outdata = systemIdent(obj, indata)
+      cmdID = obj.CMDID_SYSIDT;
+      if length(indata)>100
+        data = indata(1:100)(:);
+      else
+        data = zeros(100,1);
+        data(1:length(indata)) = indata(:);
+      end
+      timeout=20;
+      [outdata, sz] = sendCommand(obj.Parent, obj.LibraryName, cmdID, uint8(indata.*255) ,timeout);
     end
     
   end

@@ -45,6 +45,7 @@ void readEncoderR() {
 
 #define CMDID_READ_COUNT 0x01
 #define CMDID_CONTROL    0x02
+#define CMDID_SYSIDT     0x03
 
 const char INPUT_VALUE_INCORRECT[] PROGMEM = "Input Value Incorrect";
 
@@ -110,6 +111,27 @@ public:
         }else{
           sendErrorMsg_P(INPUT_VALUE_INCORRECT);
         }
+        break;
+
+      case CMDID_SYSIDT:
+
+        for(int i=0;i<100;i++){
+
+          analogWrite(MOT_LF, data[i]);
+          data[i] = (uint8_t)count_l;
+          count_l = 0;
+
+          // analogWrite(MOT_RF, data[i]);
+          // data[i] = (uint8_t)count_r;
+          // count_r = 0;
+
+          delay(100);
+
+        }
+        analogWrite(MOT_LF, 0);
+        analogWrite(MOT_RF, 0);
+        datasz = 100;
+        sendResponseMsg(cmdID, data, datasz);
         break;
 
       default:
