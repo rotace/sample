@@ -120,3 +120,30 @@ rtp.recv:
 	avdec_h264 ! \
 	videoconvert ! \
 	autovideosink
+
+rtsp.fake:
+	@gst-launch-1.0 -v \
+	rtspsrc location=rtsp://127.0.0.1:8554/test ! \
+	fakesink
+
+rtsp.test.send:
+	@./test-launch '( videotestsrc ! x264enc ! rtph264pay name=pay0 pt=96 )'
+
+rtsp.test.recv:
+	@gst-launch-1.0 -v \
+	rtspsrc location=rtsp://127.0.0.1:8554/test ! \
+	rtph264depay ! \
+	avdec_h264 ! \
+	videoconvert ! \
+	autovideosink
+
+rtsp.send:
+	@./test-launch '( v4l2src ! video/x-raw,width=160,height=120,framerate=8/1 ! videoconvert ! x264enc ! rtph264pay name=pay0 pt=96 )'
+
+rtsp.recv:
+	@gst-launch-1.0 -v \
+	rtspsrc location=rtsp://khi-desktop.local:8554/test ! \
+	rtph264depay ! \
+	avdec_h264 ! \
+	videoconvert ! \
+	autovideosink
