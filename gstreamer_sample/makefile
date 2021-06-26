@@ -3,18 +3,40 @@
 
 all:
 
+v4l2.loopback.add:
+	@sudo modprobe v4l2loopback video_nr=100 exclusive_caps=1
+
+v4l2.loopback.del:
+	@sudo modprobe -r v4l2loopback
+
+v4l2.loopback.send:
+	@gst-launch-1.0 -v \
+	videotestsrc ! \
+	videoconvert ! \
+	video/x-raw,format=I420 ! \
+	v4l2sink device=/dev/video100
+
+v4l2.loopback.recv:
+	@gst-launch-1.0 -v \
+	v4l2src device=/dev/video100 ! \
+	videoconvert ! \
+	autovideosink
+
+v4l2.devices:
+	@v4l2-ctl --list-devices
+
+v4l2.formats:
+	@v4l2-ctl --list-formats
+
+v4l2.formats.all:
+	@v4l2-ctl --list-formats-ext | less
+
+
 usbcam:
 	@gst-launch-1.0 -v \
 	v4l2src ! \
 	videoconvert ! \
 	autovideosink
-
-usbcam.info:
-	@v4l2-ctl --list-formats
-
-usbcam.info.all:
-	@v4l2-ctl --list-formats-ext | less
-
 
 raw.1:
 	@gst-launch-1.0 -v \
