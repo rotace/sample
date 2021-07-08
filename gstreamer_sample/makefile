@@ -3,6 +3,57 @@
 
 all:
 
+tee:
+	@gst-launch-1.0 -v \
+	videotestsrc ! \
+	tee name=t \
+	t. ! queue ! videoconvert ! autovideosink \
+	t. ! queue ! videoconvert ! autovideosink
+
+scale:
+	@gst-launch-1.0 -v \
+	videotestsrc ! \
+	videoscale ! \
+	video/x-raw,width=100 ! \
+	videoconvert ! \
+	autovideosink
+
+rate:
+	@gst-launch-1.0 -v \
+	videotestsrc ! \
+	videorate ! \
+	video/x-raw,framerate=1/1 ! \
+	videoconvert ! \
+	autovideosink
+
+
+time:
+	@gst-launch-1.0 -v \
+	videotestsrc pattern=2 ! \
+	timeoverlay halignment=right valignment=bottom text="Stream time:" shaded-background=true font-desc="Sans, 24" ! \
+	autovideosink
+
+time.src:
+	@gst-launch-1.0 -v \
+	videotestsrc pattern=2 ! \
+	timeoverlay halignment=right valignment=bottom text="Stream time:" shaded-background=true font-desc="Sans, 24" ! \
+	tee name=t \
+	t. ! queue ! videoconvert ! autovideosink \
+	t. ! queue ! videoconvert ! video/x-raw,format=I420 ! \
+	v4l2sink device=/dev/video100
+
+time.rtp:
+	@gst-launch-1.0 -v \
+	v4l2src device=/dev/video100 ! \
+	videoconvert ! \
+	x264enc tune=zerolatency ! \
+	rtph264pay ! \
+	udpsink host=127.0.0.1 port=5005 sync=false
+
+time.rtsp:
+	@~/workspace/gst-rtsp-server/examples/test-launch '( v4l2src device=/dev/video100 ! videoconvert ! x264enc tune=zerolatency ! rtph264pay name=pay0 pt=96 )'
+
+
 v4l2.loopback.add:
 	@sudo modprobe v4l2loopback video_nr=100 exclusive_caps=1
 
@@ -37,6 +88,25 @@ usbcam:
 	v4l2src ! \
 	videoconvert ! \
 	autovideosink
+
+usbcam.scale:
+	@gst-launch-1.0 -v \
+	v4l2src ! \
+	video/x-raw,width=640,height=480 ! \
+	videoscale ! \
+	video/x-raw,width=100 ! \
+	videoconvert ! \
+	autovideosink
+
+usbcam.rate:
+	@gst-launch-1.0 -v \
+	v4l2src ! \
+	video/x-raw,width=640,height=480 ! \
+	videorate ! \
+	video/x-raw,framerate=1/1 ! \
+	videoconvert ! \
+	autovideosink
+
 
 raw.1:
 	@gst-launch-1.0 -v \
@@ -99,24 +169,6 @@ jpeg.3:
 	videoconvert ! \
 	autovideosink
 
-scale:
-	@gst-launch-1.0 -v \
-	v4l2src ! \
-	video/x-raw,width=640,height=480 ! \
-	videoscale ! \
-	video/x-raw,width=100 ! \
-	videoconvert ! \
-	autovideosink
-
-rate:
-	@gst-launch-1.0 -v \
-	v4l2src ! \
-	video/x-raw,width=640,height=480 ! \
-	videorate ! \
-	video/x-raw,framerate=1/1 ! \
-	videoconvert ! \
-	autovideosink
-
 rtp.test:
 	@gst-launch-1.0 -v \
 	v4l2src ! \
@@ -164,7 +216,7 @@ rtsp.send:
 
 rtsp.recv:
 	@gst-launch-1.0 -v \
-	rtspsrc location=rtsp://khi-desktop.local:8554/test ! \
+	rtspsrc location=rtsp://127.0.0.1:8554/test ! \
 	rtph264depay ! \
 	avdec_h264 ! \
 	videoconvert ! \
