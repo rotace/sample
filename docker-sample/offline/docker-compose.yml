@@ -44,9 +44,10 @@ services:
     volumes:
       - web_data:/usr/local/apache2/htdocs
 
-  ubuntu:
-    image: localhost:5000/ubuntu
-    container_name: ubuntu1
-    tty: true
-    volumes:
-      - web_data:/usr/local/apache2/htdocs
+  # ubuntu:
+  #   image: localhost:5000/ubuntu
+  #   container_name: ubuntu1
+  #   restart: always
+  #   tty: true
+  #   volumes:
+  #     - web_data:/usr/local/apache2/htdocs
